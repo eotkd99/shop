@@ -25,6 +25,10 @@ class ResourceViewSet(viewsets.ReadOnlyModelViewSet):
     def main_category(self, request):
         return self.get_resources_by_screen('main_category')
 
+    @action(detail=False, methods=['get'], url_path='main_logo')
+    def main_logo(self, request):
+        return self.get_resources_by_screen('main_logo')
+
 class MainMenuViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = MainMenu.objects.all()
     serializer_class = MainMenuSerializer
