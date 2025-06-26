@@ -23,21 +23,21 @@ export function MainHeader() {
 
   return (
     <div>
-      <header className="h-24 mt-5 flex items-center px-4 w-7/10 mx-auto bg-white">
-        <div className="flex items-center justify-center flex-[2] h-full">
+      <header className="h-20 mt-5 flex items-center px-4 w-7/10 mx-auto bg-white">
+        <div className="flex items-center justify-center flex-[2] h-20 w-full overflow-hidden">
           {logo ? (
             <img
               src={logo.path}
               alt={logo.name}
-              className="max-w-full max-h-full w-auto h-20 object-contain block"
-              draggable={false}
+              className="w-full max-w-[90%] object-contain block"
             />
           ) : (
-            <div className="w-32 h-20 bg-gray-200 animate-pulse" />
+            <div className="w-full h-full bg-gray-200 animate-pulse" />
           )}
         </div>
+
         <div className="flex items-center justify-center flex-[6]">
-          <form className="flex w-[80%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden">
+          <form className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden">
             <select className="h-full px-3 bg-white text-gray-700 text-sm border-none focus:ring-0 focus:outline-none">
               <option>All</option>
               <option>Books</option>
@@ -70,13 +70,33 @@ export function MainHeader() {
             <Bell className="w-6 h-6 text-gray-500" />
             <span className="text-xs text-gray-600 mt-1">알림</span>
           </a>
-          <a href="" className="flex-1 flex flex-col items-center justify-center">
+          <a
+            href={
+              typeof window !== "undefined" && localStorage.getItem("jwt")
+                ? `/account?id=${getUserIdFromJwt(localStorage.getItem("jwt")!)}`
+                : "/login"
+            }
+            className="flex-1 flex flex-col items-center justify-center"
+          >
             <User className="w-6 h-6 text-gray-500" />
-            <span className="text-xs text-gray-600 mt-1">마이</span>
+            <span className="text-xs text-gray-600 mt-1">
+              {typeof window !== "undefined" && localStorage.getItem("jwt") ? "마이" : "로그인"}
+            </span>
           </a>
+
+
         </div>
       </header>
-      <hr className="w-7/10 mx-auto my-4 border-gray-200" />
+      <hr className="w-15/20 mx-auto my-4 border-gray-200" />
     </div>
   );
+}
+
+function getUserIdFromJwt(jwt: string): string {
+  try {
+    const payload = JSON.parse(atob(jwt.split(".")[1]));
+    return payload.id ? String(payload.id) : "";
+  } catch {
+    return "";
+  }
 }

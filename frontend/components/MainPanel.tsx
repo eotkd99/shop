@@ -37,7 +37,7 @@ export function MainPanel() {
 
   return (
     <div
-      className="relative w-full h-[480px] overflow-hidden"
+      className="relative w-full h-[520px] overflow-hidden"
       style={
         {
           "--swiper-navigation-color": "white",
@@ -50,7 +50,7 @@ export function MainPanel() {
         modules={[Navigation, Autoplay]}
         navigation
         loop
-        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        autoplay={{ delay: 4000, disableOnInteraction: false }}
         slidesPerView={1}
         onSwiper={(s) => (swiperRef.current = s)}
         onSlideChange={(s) => setCurrent((s.realIndex % data.length) + 1)}
