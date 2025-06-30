@@ -11,6 +11,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'main',
     'user',
+    'product',
     'corsheaders',
     'django_extensions',
     'rest_framework',
@@ -86,7 +87,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # 언어, 시간대, 국제화
-LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
@@ -114,3 +114,10 @@ SIMPLE_JWT = {
 # 쿠키/세션 보안
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
+
+LANGUAGE_CODE = 'ko'  # 한글로 설정
+
+LANGUAGES = [
+    ('ko', 'Korean'),
+    ('en', 'English'),
+]

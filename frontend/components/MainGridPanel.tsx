@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 type MainGridPanelItem = {
   id: number;
@@ -12,9 +13,10 @@ export function MainGridPanel() {
   const [data, setData] = useState<MainGridPanelItem[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/resources/main_grid_panel/")
-      .then((res) => res.json())
-      .then(setData);
+    axios
+      .get("http://localhost:8000/resources/main_grid_panel/")
+      .then((response) => setData(response.data))
+      .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
   return (

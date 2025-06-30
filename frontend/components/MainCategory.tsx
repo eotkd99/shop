@@ -5,6 +5,7 @@ import * as LucideIcons from "lucide-react";
 import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import axios from "axios";
 
 type MainCategory = { id: number; name: string; path: string };
 type Leaf = { id: number | string; name: string };
@@ -19,12 +20,15 @@ export function MainCategory() {
   const [sub, setSub] = useState<Sub | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/resources/main_category/")
-      .then((r) => r.json())
-      .then(setMainCats);
-    fetch("http://localhost:8000/main_menu/")
-      .then((r) => r.json())
-      .then(setMenus);
+    axios
+      .get("http://localhost:8000/resources/main_category/")
+      .then((response) => setMainCats(response.data))
+      .catch((error) => console.error("Error fetching main categories:", error));
+
+    axios
+      .get("http://localhost:8000/main_menu/")
+      .then((response) => setMenus(response.data))
+      .catch((error) => console.error("Error fetching main menu:", error));
   }, []);
 
   return (
@@ -62,7 +66,6 @@ export function MainCategory() {
             }}
           >
             <div className="flex h-full">
-              {/* 1st column: main menu */}
               <div className="w-48 bg-gray-900 text-white border-r border-gray-200 h-full">
                 {menus.map((m) => {
                   const Icon = LucideIcons[m.icon_name as keyof typeof LucideIcons] as React.ComponentType<any>;
@@ -87,7 +90,6 @@ export function MainCategory() {
                   );
                 })}
               </div>
-              {/* 2nd column: sub menu */}
               {cat && (
                 <div className="flex-1 flex">
                   <div
@@ -113,7 +115,6 @@ export function MainCategory() {
                       </a>
                     ))}
                   </div>
-                  {/* 3rd column: leaf menu */}
                   {sub && (
                     <div className="w-2/3 overflow-y-auto bg-white h-full border-l border-gray-100">
                       <ul className="grid grid-cols-2 gap-x-6 gap-y-2 p-6">
@@ -139,7 +140,6 @@ export function MainCategory() {
           </PopoverContent>
         </Popover>
 
-        {/* Main category icons */}
         {mainCats.map((c) =>
           c.path?.trim() ? (
             <a

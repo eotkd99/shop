@@ -6,8 +6,8 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Pause, Play } from "lucide-react";
+import axios from "axios";
 
-// 테이블 구조 그대로
 type MainPanelItem = {
   id: number;
   name: string;
@@ -21,9 +21,10 @@ export function MainPanel() {
   const swiperRef = useRef<any>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/resources/main_panel/")
-      .then((res) => res.json())
-      .then(setData);
+    axios
+      .get("http://localhost:8000/resources/main_panel/")
+      .then((response) => setData(response.data))
+      .catch((error) => console.error("Error fetching main panel data:", error));
   }, []);
 
   const togglePlay = () => {

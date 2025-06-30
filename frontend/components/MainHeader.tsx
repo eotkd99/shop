@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Search, Heart, ShoppingCart, Bell, User, LogOut, UserPlus } from "lucide-react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"; // shadcn/ui Select 컴포넌트 추가
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 type LogoResource = {
   id: number;
@@ -14,24 +16,25 @@ export function MainHeader() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8000/resources/main_logo/")
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setLogo(data[0]);
+    // 로고 데이터 가져오기
+    axios
+      .get("http://localhost:8000/resources/main_logo/")
+      .then((response) => {
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          setLogo(response.data[0]);
         }
-      });
+      })
+      .catch((error) => console.error("Error fetching logo:", error));
 
+    // 인증 상태 확인
     const checkAuthentication = async () => {
-      const res = await fetch("http://localhost:8000/api/check-auth/", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setIsAuthenticated(data.isAuthenticated);
-      } else {
+      try {
+        const res = await axios.get("http://localhost:8000/api/check-auth/", {
+          withCredentials: true, // 쿠키 전송
+        });
+        setIsAuthenticated(res.data.isAuthenticated);
+      } catch (error) {
+        // 인증되지 않은 경우에는 초기 상태 (로그인 필요)
         setIsAuthenticated(false);
       }
     };
@@ -40,15 +43,17 @@ export function MainHeader() {
   }, []);
 
   const handleLogout = async () => {
-    await fetch("http://localhost:8000/api/logout/", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    setIsAuthenticated(false);
-    window.location.href = "/";
+    try {
+      await axios.post(
+        "http://localhost:8000/api/logout/",
+        {},
+        { withCredentials: true } // 로그아웃 요청 시 쿠키 포함
+      );
+      setIsAuthenticated(false); // 로그아웃 후 인증 상태 false
+      window.location.href = "/"; // 홈으로 리다이렉트
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -68,7 +73,6 @@ export function MainHeader() {
 
         <div className="flex items-center justify-center flex-[6]">
           <form className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden shadow-sm">
-            {/* Shadcn UI Select */}
             <Select defaultValue="all" onValueChange={() => {}}>
               <SelectTrigger className="h-full px-3 text-gray-800 text-sm bg-white border-none focus:ring-0 focus:outline-none transition cursor-pointer min-w-[100px] rounded-none">
                 <SelectValue placeholder="카테고리" />
@@ -149,7 +153,7 @@ export function MainHeader() {
                   background: "none",
                   padding: 0,
                   margin: 0,
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 <LogOut className="w-6 h-6 text-gray-500" />

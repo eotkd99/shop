@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import axios from "axios";
 
 export default function JoinPage() {
   const [id, setId] = useState("");
@@ -19,45 +20,36 @@ export default function JoinPage() {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/join/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: id,
-          password: pw,
-          password2: pw2,
-          email,
-          agree,
-        }),
+      const res = await axios.post("http://localhost:8000/api/join/", {
+        username: id,
+        password: pw,
+        password2: pw2,
+        email,
+        agree,
       });
 
-      if (res.ok) {
+      if (res.status === 201) {
         window.location.href = "/login";
         return;
       }
 
-      // 서버에서 에러 메시지를 반환할 때 처리
-      let msg = "회원가입에 실패했습니다.";
-      try {
-        const data = await res.json();
-        console.log(data);
-        if (typeof data === "string") {
-          msg = data;
-        } else if (data && typeof data === "object") {
-          // 여러 필드의 에러가 있을 때 모두 합쳐서 출력
-          msg = Object.values(data)
-            .flat()
-            .join(" ");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          let errorMsg = "회원가입에 실패했습니다.";
+          if (error.response.data) {
+            const errors = error.response.data;
+            errorMsg = Object.values(errors).flat().join(" ");
+          }
+          setError(errorMsg);
+        } else if (error.request) {
+          setError("네트워크 오류가 발생했습니다.");
+        } else {
+          setError("알 수 없는 오류 발생: " + error.message);
         }
-      } catch (e) {
-        // JSON 파싱 실패 시, 기본 메시지 유지
+      } else {
+        setError("알 수 없는 오류 발생");
       }
-      setError(msg);
-
-    } catch {
-      setError("네트워크 오류가 발생했습니다.");
     }
   }
 
@@ -69,42 +61,10 @@ export default function JoinPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleJoin} className="flex flex-col gap-5">
-            <Input
-              id="userid"
-              type="text"
-              autoComplete="username"
-              value={id}
-              onChange={e => setId(e.target.value)}
-              placeholder="아이디"
-              required
-            />
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="이메일"
-              required
-            />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              value={pw}
-              onChange={e => setPw(e.target.value)}
-              placeholder="비밀번호"
-              required
-            />
-            <Input
-              id="password2"
-              type="password"
-              autoComplete="new-password"
-              value={pw2}
-              onChange={e => setPw2(e.target.value)}
-              placeholder="비밀번호 확인"
-              required
-            />
+            <Input id="userid" type="text" autoComplete="username" value={id} onChange={e => setId(e.target.value)} placeholder="아이디" required />
+            <Input id="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="이메일" required />
+            <Input id="password" type="password" autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)} placeholder="비밀번호" required />
+            <Input id="password2" type="password" autoComplete="new-password" value={pw2} onChange={e => setPw2(e.target.value)} placeholder="비밀번호 확인" required />
             <div className="flex items-center gap-2">
               <Checkbox id="agree" checked={agree} onCheckedChange={v => setAgree(!!v)} />
               <Label htmlFor="agree" className="text-sm cursor-pointer">약관에 동의합니다</Label>
@@ -114,12 +74,7 @@ export default function JoinPage() {
           </form>
         </CardContent>
         <CardFooter className="flex items-center justify-center px-6 pb-4">
-          <a
-            href="/login"
-            className="text-xs text-gray-500 hover:underline text-center inline-block"
-          >
-            로그인 화면으로
-          </a>
+          <a href="/login" className="text-xs text-gray-500 hover:underline text-center inline-block">로그인 화면으로</a>
         </CardFooter>
       </Card>
     </div>
