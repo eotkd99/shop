@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Search, Heart, ShoppingCart, Bell, User, LogOut, UserPlus } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"; // shadcn/ui Select 컴포넌트 추가
 
 type LogoResource = {
   id: number;
@@ -47,7 +48,7 @@ export function MainHeader() {
       },
     });
     setIsAuthenticated(false);
-    window.location.href = "/"; // 로그아웃 후 메인 이동
+    window.location.href = "/";
   };
 
   return (
@@ -66,12 +67,18 @@ export function MainHeader() {
         </div>
 
         <div className="flex items-center justify-center flex-[6]">
-          <form className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden">
-            <select className="h-full px-3 bg-white text-gray-700 text-sm border-none focus:ring-0 focus:outline-none">
-              <option>All</option>
-              <option>Books</option>
-              <option>Electronics</option>
-            </select>
+          <form className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden shadow-sm">
+            {/* Shadcn UI Select */}
+            <Select defaultValue="all" onValueChange={() => {}}>
+              <SelectTrigger className="h-full px-3 text-gray-800 text-sm bg-white border-none focus:ring-0 focus:outline-none transition cursor-pointer min-w-[100px] rounded-none">
+                <SelectValue placeholder="카테고리" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="books">Books</SelectItem>
+                <SelectItem value="electronics">Electronics</SelectItem>
+              </SelectContent>
+            </Select>
             <input
               type="text"
               placeholder="Search Amazon"
@@ -137,7 +144,13 @@ export function MainHeader() {
               <button
                 onClick={handleLogout}
                 className="flex-1 flex flex-col items-center justify-center hover:bg-gray-50 transition"
-                style={{ border: "none", background: "none", padding: 0, margin: 0, cursor: "pointer" }}
+                style={{
+                  border: "none",
+                  background: "none",
+                  padding: 0,
+                  margin: 0,
+                  cursor: "pointer"
+                }}
               >
                 <LogOut className="w-6 h-6 text-gray-500" />
                 <span className="text-xs text-gray-600 mt-1">로그아웃</span>
@@ -146,7 +159,7 @@ export function MainHeader() {
           )}
         </div>
       </header>
-      <hr className="w-15/20 mx-auto my-4 border-gray-200" />
+      <hr className="w-14/20 mx-auto my-4 border-gray-200" />
     </div>
   );
 }
