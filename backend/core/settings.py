@@ -1,45 +1,50 @@
 from pathlib import Path
+from datetime import timedelta
 
+# 기본 프로젝트 경로 및 보안
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SECRET_KEY = 'django-insecure-vr-2p-#pt-ybc-_gqqiajm%nvctjncg0-(g@b)mull*o=h)*e%'
-
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
+# 앱 등록
 INSTALLED_APPS = [
+    'main',
+    'user',
+    'corsheaders',
+    'django_extensions',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'main',
-    "user",
-
-    "corsheaders",
-    'django_extensions',
-    "rest_framework",
-    "rest_framework_simplejwt",
 ]
 
+# 미들웨어
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
- 
-ROOT_URLCONF = 'core.urls'
+# CORS 설정
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+CORS_ALLOW_CREDENTIALS = True
 
+# URL, WSGI, Templating
+ROOT_URLCONF = 'core.urls'
+WSGI_APPLICATION = 'core.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -55,52 +60,19 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
-
+# 데이터베이스
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'shop_db',        # 데이터베이스 이름 (예시)
-        'USER': 'postgres',           # DB 사용자명
-        'PASSWORD': '1670',       # DB 비밀번호
-        'HOST': 'localhost',      # 또는 실제 DB 주소
-        'PORT': '5432',           # 기본 포트
+        'NAME': 'shop_db',
+        'USER': 'postgres',
+        'PASSWORD': '1670',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-STATIC_URL = 'static/'
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
-}
-
+# 패스워드 검증
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -109,6 +81,36 @@ AUTH_PASSWORD_VALIDATORS = [
         }
     },
     {
-        "NAME": "user.validators.SafeSpecialCharacterPasswordValidator",  
+        "NAME": "user.validators.SafeSpecialCharacterPasswordValidator",
     },
 ]
+
+# 언어, 시간대, 국제화
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+# 정적파일
+STATIC_URL = 'static/'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST 프레임워크(JWT 쿠키 인증)
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        'user.authentication.CookieJWTAuthentication',
+    )
+}
+
+# SimpleJWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+}
+
+# 쿠키/세션 보안
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False

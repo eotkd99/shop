@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,28 +12,22 @@ export default function LoginPage() {
   const [pw, setPw] = useState("");
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    try {
-      const res = await fetch("http://localhost:8000/api/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: id, password: pw }),
-      });
-      if (!res.ok) {
-        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
-        return;
-      }
-      const data = await res.json();
-      localStorage.setItem("jwt", data.token);
-      window.location.href = "/";
-    } catch {
-      setError("로그인 중 오류가 발생했습니다.");
+    const res = await fetch("http://localhost:8000/api/login/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: id, password: pw, remember }),
+      credentials: "include",
+    });
+    if (!res.ok) {
+      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      return;
     }
+    router.push("/");
   }
 
   return (
@@ -43,28 +38,24 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
-            <div>
-              <Input
-                id="userid"
-                type="text"
-                autoComplete="username"
-                value={id}
-                onChange={e => setId(e.target.value)}
-                placeholder="아이디를 입력하세요"
-                required
-              />
-            </div>
-            <div>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={pw}
-                onChange={e => setPw(e.target.value)}
-                placeholder="비밀번호를 입력하세요"
-                required
-              />
-            </div>
+            <Input
+              id="userid"
+              type="text"
+              autoComplete="username"
+              value={id}
+              onChange={e => setId(e.target.value)}
+              placeholder="아이디를 입력하세요"
+              required
+            />
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={pw}
+              onChange={e => setPw(e.target.value)}
+              placeholder="비밀번호를 입력하세요"
+              required
+            />
             <div className="flex items-center gap-2">
               <Checkbox id="remember" checked={remember} onCheckedChange={v => setRemember(!!v)} />
               <Label htmlFor="remember" className="text-sm cursor-pointer">로그인 상태 유지</Label>
@@ -89,6 +80,14 @@ export default function LoginPage() {
               회원가입
             </a>
           </div>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="mt-4 text-xs text-gray-500 hover:underline text-center"
+            style={{ outline: "none", background: "none", border: "none", cursor: "pointer" }}
+          >
+            홈으로
+          </button>
         </CardFooter>
       </Card>
     </div>
