@@ -1,11 +1,13 @@
-from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views
+from .views import (
+    MainMenuViewSet, MainMenuSubViewSet, MainMenuLeafViewSet,
+    ResourceViewSet
+)
 
 router = DefaultRouter()
-router.register(r'resources', views.ResourceViewSet)  
-router.register(r'main_menu', views.MainMenuViewSet)
+router.register(r'main_menu', MainMenuViewSet, basename='main_menu')
+router.register(r'main_menu_sub', MainMenuSubViewSet, basename='main_menu_sub')
+router.register(r'main_menu_leaf', MainMenuLeafViewSet, basename='main_menu_leaf')
+router.register(r'resources', ResourceViewSet, basename='resources')
 
-urlpatterns = [
-    path('', include(router.urls)), 
-]
+urlpatterns = router.urls

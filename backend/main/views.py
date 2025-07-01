@@ -1,8 +1,38 @@
 from rest_framework import viewsets
+from .models import MainMenu, MainMenuSub, MainMenuLeaf, Resource
+from .serializers import (
+    MainMenuSerializer, MainMenuSubSerializer, MainMenuLeafSerializer,
+    ResourceSerializer
+)
+
+class MainMenuViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = MainMenu.objects.all()
+    serializer_class = MainMenuSerializer
+
+class MainMenuSubViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = MainMenuSub.objects.all()
+    serializer_class = MainMenuSubSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        menu_id = self.request.query_params.get("menu_id")
+        if menu_id:
+            qs = qs.filter(menu_id=menu_id)
+        return qs
+
+class MainMenuLeafViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = MainMenuLeaf.objects.all()
+    serializer_class = MainMenuLeafSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        sub_id = self.request.query_params.get("sub_id")
+        if sub_id:
+            qs = qs.filter(sub_id=sub_id)
+        return qs
+    
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Resource, MainMenu
-from .serializers import ResourceSerializer, MainMenuSerializer
 
 class ResourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Resource.objects.all()
@@ -28,7 +58,3 @@ class ResourceViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='main_logo')
     def main_logo(self, request):
         return self.get_resources_by_screen('main_logo')
-
-class MainMenuViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = MainMenu.objects.all()
-    serializer_class = MainMenuSerializer

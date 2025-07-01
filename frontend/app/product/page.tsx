@@ -1,79 +1,115 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";  // lucide-react에서 Loader2 import
+import { Loader2 } from "lucide-react";
+import { Package } from "lucide-react";
+import { Select, SelectItem, SelectContent, SelectTrigger } from "@/components/ui/select";
 
-// lucide-react 아이콘 임포트
-import { Package } from "lucide-react";  // 아이콘으로 Package 사용
+type MainMenu = { id: number; name: string };
+type MainMenuSub = { id: number; seq: number; name: string; menu: number };
+type MainMenuLeaf = { id: number; seq: number; name: string; sub: number };
 
-// Select와 SelectItem 컴포넌트의 임포트
-import { Select, SelectItem, SelectContent, SelectTrigger } from "@/components/ui/select";  // Select 관련 임포트 추가
-
-// Filters 인터페이스 정의
-interface Filters {
-  category: string;
+type Filters = {
+  mainMenu: string;
+  mainMenuSub: string;
+  mainMenuLeaf: string;
+  status: string;
+  rating: string;
   priceOrder: string;
-  search: string;
-}
+};
 
 const ProductList = () => {
-  const [products, setProducts] = useState<any[]>([]);  // 상품 목록
+  const [products, setProducts] = useState<any[]>([]);
+  const [mainMenus, setMainMenus] = useState<MainMenu[]>([]);
+  const [mainMenuSubs, setMainMenuSubs] = useState<MainMenuSub[]>([]);
+  const [mainMenuLeaves, setMainMenuLeaves] = useState<MainMenuLeaf[]>([]);
   const [filters, setFilters] = useState<Filters>({
-    category: "All Categories", // 기본값을 "All Categories"로 설정
-    priceOrder: "Price", // 기본값을 "Price"로 설정
-    search: "",
+    mainMenu: "All",
+    mainMenuSub: "All",
+    mainMenuLeaf: "All",
+    status: "All",
+    rating: "All",
+    priceOrder: "Price",
   });
-  const [loading, setLoading] = useState(false);  // 로딩 상태
-  const [viewType, setViewType] = useState<"grid" | "list">("grid");  // 그리드/리스트 뷰 선택
+  const [loading, setLoading] = useState(false);
+  const [viewType, setViewType] = useState<"grid" | "list">("grid");
 
+  // 1. 메인 메뉴만 최초 로딩
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get("http://localhost:8000/api/products/", {
-          params: {
-            category: filters.category !== "All Categories" ? filters.category : undefined,
-            ordering: filters.priceOrder !== "Price" ? filters.priceOrder : undefined,
-            search: filters.search,
-          },
-        });
-        setProducts(response.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-      setLoading(false);
-    };
+    axios.get("http://localhost:8000/main_menu/").then(r => setMainMenus(r.data));
+  }, []);
 
-    fetchProducts();
+  // 2. mainMenu가 변경되면 서브카테고리만 다시 불러오기, 하위 All로 리셋
+  useEffect(() => {
+    if (filters.mainMenu !== "All") {
+      axios
+        .get("http://localhost:8000/main_menu_sub/", { params: { menu_id: filters.mainMenu } })
+        .then(r => setMainMenuSubs(r.data));
+      setFilters((prev) => ({ ...prev, mainMenuSub: "All", mainMenuLeaf: "All" }));
+    } else {
+      setMainMenuSubs([]);
+      setFilters((prev) => ({ ...prev, mainMenuSub: "All", mainMenuLeaf: "All" }));
+    }
+    setMainMenuLeaves([]);
+  }, [filters.mainMenu]);
+
+  // 3. mainMenuSub가 변경되면 리프카테고리만 다시 불러오기, 하위 All로 리셋
+  useEffect(() => {
+    if (filters.mainMenuSub !== "All") {
+      axios
+        .get("http://localhost:8000/main_menu_leaf/", { params: { sub_id: filters.mainMenuSub } })
+        .then(r => setMainMenuLeaves(r.data));
+      setFilters((prev) => ({ ...prev, mainMenuLeaf: "All" }));
+    } else {
+      setMainMenuLeaves([]);
+      setFilters((prev) => ({ ...prev, mainMenuLeaf: "All" }));
+    }
+  }, [filters.mainMenuSub]);
+
+  // 상품 데이터 로딩
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get("http://localhost:8000/api/products/", {
+        params: {
+          mainMenu: filters.mainMenu !== "All" ? filters.mainMenu : undefined,
+          mainMenuSub: filters.mainMenuSub !== "All" ? filters.mainMenuSub : undefined,
+          mainMenuLeaf: filters.mainMenuLeaf !== "All" ? filters.mainMenuLeaf : undefined,
+          status: filters.status !== "All" ? filters.status : undefined,
+          rating: filters.rating !== "All" ? filters.rating : undefined,
+          ordering: filters.priceOrder !== "Price" ? filters.priceOrder : undefined,
+        },
+      })
+      .then((r) => setProducts(r.data))
+      .finally(() => setLoading(false));
   }, [filters]);
 
-  const handleFilterChange = (value: string, name: string) => {
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
+  const handleFilterChange = (value: string, name: keyof Filters) => {
+    if (name === "mainMenu") {
+      setFilters({
+        ...filters,
+        mainMenu: value,
+        mainMenuSub: "All",
+        mainMenuLeaf: "All",
+      });
+    } else if (name === "mainMenuSub") {
+      setFilters({
+        ...filters,
+        mainMenuSub: value,
+        mainMenuLeaf: "All",
+      });
+    } else {
+      setFilters({ ...filters, [name]: value });
+    }
   };
 
-  const handleViewTypeChange = (view: "grid" | "list") => {
-    setViewType(view);
-  };
-
-  const handleAddToWishlist = (productId: number) => {
-    console.log(`Product ${productId} added to wishlist`);
-  };
-
-  const handleAddToCart = (productId: number) => {
-    console.log(`Product ${productId} added to cart`);
-  };
-
-  // 로딩 중일 경우 Loader2 컴포넌트로 스피너 표시
   if (loading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center h-48">
         <Loader2 className="animate-spin h-12 w-12 text-gray-500" />
       </div>
     );
@@ -81,48 +117,89 @@ const ProductList = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-12">
-      {/* 검색 기능 */}
       <div className="mb-8 flex items-center justify-between">
-        <Input
-          type="text"
-          name="search"
-          placeholder="Search products..."
-          className="w-1/3"
-          onChange={(e) => handleFilterChange(e.target.value, "search")}
-        />
-        <div className="space-x-4">
-          {/* 필터링 기능 */}
-          <Select value={filters.category} onValueChange={(value: string) => handleFilterChange(value, "category")}>
+        <div className="space-x-4 flex">
+          {/* 메인 카테고리 */}
+          <Select value={filters.mainMenu} onValueChange={v => handleFilterChange(v, "mainMenu")}>
             <SelectTrigger>
-              <span>Category</span>
+              <span>Main Menu</span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All Categories">All Categories</SelectItem>
-              <SelectItem value="Electronics">Electronics</SelectItem>
-              <SelectItem value="Clothing">Clothing</SelectItem>
-              <SelectItem value="Furniture">Furniture</SelectItem>
+              <SelectItem value="All">All</SelectItem>
+              {mainMenus.map(m => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {m.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select value={filters.priceOrder} onValueChange={(value: string) => handleFilterChange(value, "priceOrder")}>
+          {/* 서브 카테고리 */}
+          <Select value={filters.mainMenuSub} onValueChange={v => handleFilterChange(v, "mainMenuSub")} disabled={filters.mainMenu === "All"}>
+            <SelectTrigger>
+              <span>Main Menu Sub</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              {mainMenuSubs.map(s => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* 리프 카테고리 */}
+          <Select value={filters.mainMenuLeaf} onValueChange={v => handleFilterChange(v, "mainMenuLeaf")} disabled={filters.mainMenuSub === "All"}>
+            <SelectTrigger>
+              <span>Main Menu Leaf</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              {mainMenuLeaves.map(l => (
+                <SelectItem key={l.id} value={String(l.id)}>
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* 기타 필터 */}
+          <Select value={filters.status} onValueChange={v => handleFilterChange(v, "status")}>
+            <SelectTrigger>
+              <span>Status</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="In Stock">In Stock</SelectItem>
+              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filters.rating} onValueChange={v => handleFilterChange(v, "rating")}>
+            <SelectTrigger>
+              <span>Rating</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              <SelectItem value="4">4 Stars</SelectItem>
+              <SelectItem value="4.5">4.5 Stars</SelectItem>
+              <SelectItem value="5">5 Stars</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filters.priceOrder} onValueChange={v => handleFilterChange(v, "priceOrder")}>
             <SelectTrigger>
               <span>Price</span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Price">Price</SelectItem>
+              <SelectItem value="Price">Default</SelectItem>
               <SelectItem value="price">Low to High</SelectItem>
               <SelectItem value="-price">High to Low</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
-        {/* 그리드/리스트 뷰 전환 */}
         <div>
-          <Button onClick={() => handleViewTypeChange("grid")}>Grid View</Button>
-          <Button onClick={() => handleViewTypeChange("list")}>List View</Button>
+          <Button onClick={() => setViewType("grid")}>Grid View</Button>
+          <Button onClick={() => setViewType("list")}>List View</Button>
         </div>
       </div>
 
-      {/* 상품 카드 디자인 */}
       <div
         className={
           viewType === "grid"
@@ -133,7 +210,7 @@ const ProductList = () => {
         {products.map((product) => (
           <Card key={product.id} className="border rounded-lg p-4">
             <CardHeader className="flex justify-center items-center">
-              <Package className="text-gray-500 h-24 w-24" /> {/* 아이콘으로 대체 */}
+              <Package className="text-gray-500 h-24 w-24" />
             </CardHeader>
             <CardContent>
               <h3 className="text-lg font-semibold">{product.name}</h3>
@@ -148,10 +225,10 @@ const ProductList = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center mt-4">
-              <Button size="sm" onClick={() => handleAddToWishlist(product.id)}>
+              <Button size="sm" onClick={() => {}}>
                 Add to Wishlist
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleAddToCart(product.id)}>
+              <Button size="sm" variant="outline" onClick={() => {}}>
                 Add to Cart
               </Button>
             </CardFooter>

@@ -1,24 +1,20 @@
 from rest_framework import serializers
-from .models import Resource, MainMenu, MainMenuSub, MainMenuLeaf
+from .models import MainMenu, MainMenuSub, MainMenuLeaf, Resource
+
+class MainMenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MainMenu
+        fields = ['id', 'name']
+
+class MainMenuSubSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MainMenuSub
+        fields = ['id', 'seq', 'name', 'menu']
 
 class MainMenuLeafSerializer(serializers.ModelSerializer):
     class Meta:
         model = MainMenuLeaf
-        fields = ['id', 'name']
-
-class MainMenuSubSerializer(serializers.ModelSerializer):
-    leaves = MainMenuLeafSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = MainMenuSub
-        fields = ['id', 'name', 'leaves']
-
-class MainMenuSerializer(serializers.ModelSerializer):
-    subs = MainMenuSubSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = MainMenu
-        fields = ['id', 'name', 'icon_name', 'subs']
+        fields = ['id', 'seq', 'name', 'sub']
 
 class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
