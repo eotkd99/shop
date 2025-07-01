@@ -1,59 +1,91 @@
-from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Products
-from .serializers import ProductsSerializer
 
-class ProductsList(APIView):
-    def get(self, request):
-        products = Products.objects.all()
+from .models import ProductCategory, FilterType, FilterValue, Product
+from .serializers import (
+    ProductCategorySerializer,
+    FilterTypeSerializer,
+    FilterValueSerializer,
+    ProductSerializer,
+)
 
-        # mainMenu 필터 (id 또는 name 둘 다 지원)
-        main_menu = request.GET.get('mainMenu')
-        if main_menu and main_menu != 'All':
-            if main_menu.isdigit():
-                products = products.filter(main_menu_id=int(main_menu))
-            else:
-                products = products.filter(main_menu__name=main_menu)
+class ProductCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ProductCategory.objects.filter(is_active=True)
+    serializer_class = ProductCategorySerializer
 
-        # mainMenuSub 필터 (id 또는 name 둘 다 지원)
-        main_menu_sub = request.GET.get('mainMenuSub')
-        if main_menu_sub and main_menu_sub != 'All':
-            if main_menu_sub.isdigit():
-                products = products.filter(main_menu_sub_id=int(main_menu_sub))
-            else:
-                products = products.filter(main_menu_sub__name=main_menu_sub)
+    @action(detail=True, methods=['get'])
+    def filters(self, request, pk=None):
+        category = self.get_object()
+        filter_types = category.filter_types.filter(is_active=True).prefetch_related('values')
+        serializer = FilterTypeSerializer(filter_types, many=True)
+        return Response(serializer.data)
 
-        # mainMenuLeaf 필터 (id 또는 name 둘 다 지원)
-        main_menu_leaf = request.GET.get('mainMenuLeaf')
-        if main_menu_leaf and main_menu_leaf != 'All':
-            if main_menu_leaf.isdigit():
-                products = products.filter(main_menu_leaf_id=int(main_menu_leaf))
-            else:
-                products = products.filter(main_menu_leaf__name=main_menu_leaf)
+class FilterTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FilterType.objects.filter(is_active=True)
+    serializer_class = FilterTypeSerializer
 
-        # status: In Stock / Out of Stock / 기타
-        status_param = request.GET.get('status')
-        if status_param and status_param != 'All':
-            if status_param in ["In Stock", "in stock"]:
-                products = products.filter(stock__gt=0)
-            elif status_param in ["Out of Stock", "out of stock"]:
-                products = products.filter(stock=0)
-            else:
-                products = products.filter(status=status_param)
+class FilterValueViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FilterValue.objects.filter(is_active=True)
+    serializer_class = FilterValueSerializer
 
-        # rating (숫자 값, 문자열도 수용)
-        rating = request.GET.get('rating')
-        if rating and rating != "All":
-            try:
-                products = products.filter(rating=float(rating))
-            except Exception:
-                pass
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Product.objects.filter(is_active=True)
+    serializer_class = ProductSerializer
 
-        # price ordering
-        ordering = request.GET.get('ordering')
-        if ordering in ['price', '-price']:
-            products = products.order_by(ordering)
+    @staticmethod
+    def get_descendants_ids(category_id):
+        descendants = set()
+        stack = [category_id]
+        while stack:
+            current = stack.pop()
+            descendants.add(current)
+            children = ProductCategory.objects.filter(parent=current).values_list('id', flat=True)
+            stack.extend(children)
+        return list(descendants)
 
-        serializer = ProductsSerializer(products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category_id = self.request.query_params.get('category')
+        is_rocket = self.request.query_params.get('is_rocket')
+        is_free_shipping = self.request.query_params.get('is_free_shipping')
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        sort = self.request.query_params.get('sort')
+
+        if category_id:
+            ids = self.get_descendants_ids(int(category_id))
+            queryset = queryset.filter(category_id__in=ids)
+
+        # 대분류별 필터 처리
+        filter_types = FilterType.objects.filter(is_active=True)
+        for filter_type in filter_types:
+            param = f'filter_{filter_type.name}'  # 예: filter_brand
+            value_ids = self.request.query_params.getlist(param)
+            if value_ids:
+                queryset = queryset.filter(
+                    filter_values__type=filter_type,
+                    filter_values__id__in=value_ids
+                )
+
+        if is_rocket == 'true':
+            queryset = queryset.filter(is_rocket=True)
+        if is_free_shipping == 'true':
+            queryset = queryset.filter(is_free_shipping=True)
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+
+        if sort == 'low_price':
+            queryset = queryset.order_by('discount_price', 'price')
+        elif sort == 'high_price':
+            queryset = queryset.order_by('-discount_price', '-price')
+        elif sort == 'sales':
+            queryset = queryset.order_by('-sales_count')
+        elif sort == 'new':
+            queryset = queryset.order_by('-created_at')
+        else:  # default/ranking
+            queryset = queryset.order_by('-sales_count', '-review_count', '-avg_rating')
+
+        return queryset.distinct()

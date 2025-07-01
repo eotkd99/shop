@@ -1,6 +1,6 @@
 // app/somepage/page.tsx
-import { MainPanel } from "@/components/MainPanel";
-import { MainGridPanel } from "@/components/MainGridPanel";
+import { MainPanel } from "@/components/main/MainPanel";
+import { MainGridPanel } from "@/components/main/MainGridPanel";
 
 export default function SomePage() {
   return (

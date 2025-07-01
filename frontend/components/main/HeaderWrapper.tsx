@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MainHeader } from "@/components/MainHeader";
-import { MainCategory } from "@/components/MainCategory";
+import { MainHeader } from "@/components/main/MainHeader";
+import { MainCategory } from "@/components/main/MainCategory";
 
 const excludedPaths = ["/login", "/join"];
 const mainCategoryExcludedPaths = ["/products"];
@@ -14,8 +14,8 @@ export default function HeaderWrapper() {
 
   return (
     <>
-      {shouldRenderHeader && <MainHeader />}
-      {shouldRenderMainCategory && <MainCategory />}
+      {/*shouldRenderHeader && <MainHeader />*/}
+      {/*shouldRenderMainCategory && <MainCategory />*/}
     </>
   );
 }

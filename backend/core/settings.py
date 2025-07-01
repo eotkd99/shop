@@ -10,7 +10,7 @@ ALLOWED_HOSTS = []
 # 앱 등록
 INSTALLED_APPS = [
     'main',
-    'user',
+    'users',
     'products',
     'corsheaders',
     'django_extensions',
@@ -82,7 +82,7 @@ AUTH_PASSWORD_VALIDATORS = [
         }
     },
     {
-        "NAME": "user.validators.SafeSpecialCharacterPasswordValidator",
+        "NAME": "users.validators.SafeSpecialCharacterPasswordValidator",
     },
 ]
 
@@ -98,7 +98,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST 프레임워크(JWT 쿠키 인증)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        'user.authentication.CookieJWTAuthentication',
+        'users.authentication.CookieJWTAuthentication',
     )
 }
 
