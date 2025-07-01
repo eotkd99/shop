@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Product
-from .serializers import ProductSerializer
+from .models import Products
+from .serializers import ProductsSerializer
 
-class ProductList(APIView):
+class ProductsList(APIView):
     def get(self, request):
-        products = Product.objects.all()
+        products = Products.objects.all()
 
         # mainMenu 필터 (id 또는 name 둘 다 지원)
         main_menu = request.GET.get('mainMenu')
@@ -55,5 +55,5 @@ class ProductList(APIView):
         if ordering in ['price', '-price']:
             products = products.order_by(ordering)
 
-        serializer = ProductSerializer(products, many=True)
+        serializer = ProductsSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

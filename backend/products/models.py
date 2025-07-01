@@ -1,6 +1,6 @@
 from django.db import models
 
-class Product(models.Model):
+class Products(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     main_menu = models.ForeignKey('main.MainMenu', on_delete=models.CASCADE, related_name='products')
@@ -15,7 +15,7 @@ class Product(models.Model):
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
 
     class Meta:
-        db_table = 'product_product'
+        db_table = 'products_products'
         ordering = ['id']
 
     def __str__(self):

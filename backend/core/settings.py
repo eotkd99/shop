@@ -11,7 +11,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'main',
     'user',
-    'product',
+    'products',
     'corsheaders',
     'django_extensions',
     'rest_framework',

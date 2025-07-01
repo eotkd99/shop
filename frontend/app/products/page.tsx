@@ -22,7 +22,7 @@ type Filters = {
   priceOrder: string;
 };
 
-const ProductList = () => {
+const ProductsList = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [mainMenus, setMainMenus] = useState<MainMenu[]>([]);
   const [mainMenuSubs, setMainMenuSubs] = useState<MainMenuSub[]>([]);
@@ -239,4 +239,4 @@ const ProductList = () => {
   );
 };
 
-export default ProductList;
+export default ProductsList;
