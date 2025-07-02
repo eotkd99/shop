@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Menu } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import axios from "axios";
@@ -20,6 +20,8 @@ type MainCategory = {
   alt_text: string;
 };
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+
 export function MainCategory() {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -28,18 +30,22 @@ export function MainCategory() {
   const [sub, setSub] = useState<ProductCategory | null>(null);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/products/category-only/")
-      .then((r) => setCategories(r.data))
-      .catch(console.error);
+    const fetchCategories = async () => {
+      try {
+        const categoriesRes = await axios.get(`${BASE_URL}/api/products/categories/`);
+        setCategories(categoriesRes.data);
+        
+        const mainCategoriesRes = await axios.get(`${BASE_URL}/api/main_resources/main_category/`);
+        setMainCategories(mainCategoriesRes.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-    axios
-      .get("http://localhost:8000/api/main_resources/main_category/")
-      .then((r) => setMainCategories(r.data))
-      .catch(console.error);
+    fetchCategories();
   }, []);
 
-  const buildCategoryTree = (categories: ProductCategory[]) => {
+  const buildCategoryTree = useCallback((categories: ProductCategory[]) => {
     const categoryMap: { [key: number]: ProductCategory } = {};
     const rootCategories: ProductCategory[] = [];
 
@@ -57,9 +63,24 @@ export function MainCategory() {
     });
 
     return rootCategories;
-  };
+  }, []);
 
   const categoryTree = buildCategoryTree(categories);
+
+  const handleCategoryMouseEnter = (category: ProductCategory) => {
+    setCat(category);
+    setSub(null);
+  };
+
+  const handleSubcategoryMouseEnter = (subcategory: ProductCategory) => {
+    setSub(subcategory);
+  };
+
+  const handlePopoverClose = () => {
+    setOpen(false);
+    setCat(null);
+    setSub(null);
+  };
 
   return (
     <header className="flex flex-col justify-center items-center px-4 w-7/10 mx-auto mt-5 mb-5">
@@ -85,11 +106,7 @@ export function MainCategory() {
               side="bottom"
               sideOffset={12}
               className={[sub ? "w-[900px]" : cat ? "w-[480px]" : "w-48", "p-0 m-0"].join(" ")}
-              onMouseLeave={() => {
-                setOpen(false);
-                setCat(null);
-                setSub(null);
-              }}
+              onMouseLeave={handlePopoverClose}
             >
               <div className="flex h-full">
                 <div className="w-48 bg-white text-black border-r border-gray-200">
@@ -97,10 +114,7 @@ export function MainCategory() {
                     <a
                       key={m.id}
                       href="#"
-                      onMouseEnter={() => {
-                        setCat(m);
-                        setSub(null);
-                      }}
+                      onMouseEnter={() => handleCategoryMouseEnter(m)}
                       className={[
                         "flex items-center gap-2 px-4 py-3 cursor-pointer border-b border-gray-200 transition",
                         cat?.id === m.id
@@ -114,14 +128,12 @@ export function MainCategory() {
                 </div>
                 {cat && (
                   <div className="flex-1 flex">
-                    <div
-                      className={[sub ? "w-1/3" : "w-full", "overflow-y-auto bg-white", !sub ? "border-r border-gray-200" : ""].join(" ")}
-                    >
+                    <div className={[sub ? "w-1/3" : "w-full", "overflow-y-auto bg-white", !sub ? "border-r border-gray-200" : ""].join(" ")}>
                       {(cat.subcategories || []).map((s) => (
                         <a
                           key={s.id}
                           href="#"
-                          onMouseEnter={() => setSub(s)}
+                          onMouseEnter={() => handleSubcategoryMouseEnter(s)}
                           className={[
                             "block px-6 py-3 cursor-pointer border-b border-gray-100 transition",
                             sub?.id === s.id

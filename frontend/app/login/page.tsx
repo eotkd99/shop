@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+
 export default function LoginPage() {
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
@@ -14,21 +17,28 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const res = await fetch("http://localhost:8000/api/login/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: id, password: pw, remember }),
-      credentials: "include",
-    });
-    if (!res.ok) {
-      setError("아이디 또는 비밀번호가 올바르지 않습니다.");
-      return;
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/login/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: id, password: pw, remember }),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+        return;
+      }
+      router.push("/");
+    } catch (error) {
+      setError("로그인 중 오류가 발생했습니다.");
+      console.error("Login error:", error);
     }
-    router.push("/");
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

@@ -9,7 +9,7 @@ import ProductGrid from "@/components/products/ProductGrid";
 import { Category, FilterType, Product } from "@/types/products";
 
 const SORTS = [
-  { id: "ranking", label: "쿠팡 랭킹순" },
+  { id: "ranking", label: "추천순" },
   { id: "low_price", label: "낮은가격순" },
   { id: "high_price", label: "높은가격순" },
   { id: "sales", label: "판매량순" },

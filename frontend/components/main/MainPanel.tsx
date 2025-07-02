@@ -14,6 +14,8 @@ type MainPanelItem = {
   path: string;
 };
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+
 export function MainPanel() {
   const [current, setCurrent] = useState(1);
   const [playing, setPlaying] = useState(true);
@@ -21,10 +23,16 @@ export function MainPanel() {
   const swiperRef = useRef<any>(null);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/main_resources/panel")
-      .then((response) => setData(response.data))
-      .catch((error) => console.error("Error fetching main panel data:", error));
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/main_resources/panel`);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching main panel data:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const togglePlay = () => {
@@ -39,13 +47,11 @@ export function MainPanel() {
   return (
     <div
       className="relative w-full h-[520px] overflow-hidden"
-      style={
-        {
-          "--swiper-navigation-color": "white",
-          "--swiper-navigation-size": "48px",
-          "--swiper-navigation-sides-offset": "24px",
-        } as React.CSSProperties
-      }
+      style={{
+        "--swiper-navigation-color": "white",
+        "--swiper-navigation-size": "48px",
+        "--swiper-navigation-sides-offset": "24px",
+      } as React.CSSProperties}
     >
       <Swiper
         modules={[Navigation, Autoplay]}
@@ -67,14 +73,12 @@ export function MainPanel() {
         ))}
       </Swiper>
 
-      {/* Play/Pause Button */}
       <div className={`${badgeBase} right-[105px]`}>
         <button onClick={togglePlay} className="w-5 h-5 flex items-center justify-center">
           {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* Pagination */}
       <div className={`${badgeBase} right-6`}>
         <span className="text-xl leading-none">
           {current} / {data.length}

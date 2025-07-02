@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 type MainGridPanelItem = {
   id: number;
@@ -9,14 +9,22 @@ type MainGridPanelItem = {
   path: string;
 };
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+
 export function MainGridPanel() {
   const [data, setData] = useState<MainGridPanelItem[]>([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/main_resources/grid_panel")
-      .then((response) => setData(response.data))
-      .catch((error) => console.error("Error fetching data:", error));
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/main_resources/grid_panel`);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (

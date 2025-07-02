@@ -20,6 +20,12 @@ class ProductCategoryViewSet(viewsets.ReadOnlyModelViewSet):
         filter_types = category.filter_types.filter(is_active=True).prefetch_related('values')
         serializer = FilterTypeSerializer(filter_types, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def active_categories(self, request):
+        active_categories = ProductCategory.objects.filter(is_active=True)
+        serializer = ProductCategorySerializer(active_categories, many=True)
+        return Response(serializer.data)
 
 class FilterTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FilterType.objects.filter(is_active=True)
@@ -29,75 +35,89 @@ class FilterValueViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FilterValue.objects.filter(is_active=True)
     serializer_class = FilterValueSerializer
 
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
 
-    @staticmethod
-    def get_descendants_ids(category_id):
-        descendants = set()
-        stack = [category_id]
-        while stack:
-            current = stack.pop()
-            descendants.add(current)
-            children = ProductCategory.objects.filter(parent=current).values_list('id', flat=True)
-            stack.extend(children)
-        return list(descendants)
+    def get_descendants_ids(self, category_id):
+        category_ids = set([category_id])
+        descendants = ProductCategory.objects.filter(
+            parent_id=category_id
+        ).values_list('id', flat=True)
+        
+        category_ids.update(descendants)
+        
+        while descendants:
+            descendants = ProductCategory.objects.filter(
+                parent_id__in=descendants
+            ).values_list('id', flat=True)
+            category_ids.update(descendants)
+        
+        return list(category_ids)
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        category_id = self.request.query_params.get('category')
-        is_rocket = self.request.query_params.get('is_rocket')
-        is_free_shipping = self.request.query_params.get('is_free_shipping')
-        min_price = self.request.query_params.get('min_price')
-        max_price = self.request.query_params.get('max_price')
-        sort = self.request.query_params.get('sort')
+        filters = self.request.query_params
 
+        category_id = filters.get('category')
         if category_id:
             ids = self.get_descendants_ids(int(category_id))
             queryset = queryset.filter(category_id__in=ids)
 
-        # 대분류별 필터 처리
+        queryset = self.apply_filters(queryset, filters)
+        queryset = self.apply_sorting(queryset, filters.get('sort'))
+
+        return queryset.distinct()
+
+    def apply_filters(self, queryset, filters):
         filter_types = FilterType.objects.filter(is_active=True)
         for filter_type in filter_types:
-            param = f'filter_{filter_type.name}'  # 예: filter_brand
-            value_ids = self.request.query_params.getlist(param)
+            param = f'filter_{filter_type.name}'
+            value_ids = filters.getlist(param)
             if value_ids:
                 queryset = queryset.filter(
                     filter_values__type=filter_type,
                     filter_values__id__in=value_ids
                 )
 
-        if is_rocket == 'true':
+        if filters.get('is_rocket') == 'true':
             queryset = queryset.filter(is_rocket=True)
-        if is_free_shipping == 'true':
+        if filters.get('is_free_shipping') == 'true':
             queryset = queryset.filter(is_free_shipping=True)
+
+        min_price = filters.get('min_price')
         if min_price:
             queryset = queryset.filter(price__gte=min_price)
+
+        max_price = filters.get('max_price')
         if max_price:
             queryset = queryset.filter(price__lte=max_price)
 
-        if sort == 'low_price':
+        return queryset
+
+    def apply_sorting(self, queryset, sort_option):
+        if sort_option == 'low_price':
             queryset = queryset.order_by('discount_price', 'price')
-        elif sort == 'high_price':
+        elif sort_option == 'high_price':
             queryset = queryset.order_by('-discount_price', '-price')
-        elif sort == 'sales':
+        elif sort_option == 'sales':
             queryset = queryset.order_by('-sales_count')
-        elif sort == 'new':
+        elif sort_option == 'new':
             queryset = queryset.order_by('-created_at')
-        else:  # default/ranking
+        else: 
             queryset = queryset.order_by('-sales_count', '-review_count', '-avg_rating')
 
-        return queryset.distinct()
+        return queryset
+        if sort_option == 'low_price':
+            queryset = queryset.order_by('discount_price', 'price')
+        elif sort_option == 'high_price':
+            queryset = queryset.order_by('-discount_price', '-price')
+        elif sort_option == 'sales':
+            queryset = queryset.order_by('-sales_count')
+        elif sort_option == 'new':
+            queryset = queryset.order_by('-created_at')
+        else: 
+            queryset = queryset.order_by('-sales_count', '-review_count', '-avg_rating')
 
-
-class CategoryOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    # Active 카테고리만 가져오는 API
-    queryset = ProductCategory.objects.filter(is_active=True)
-    serializer_class = ProductCategorySerializer
-
-    def list(self, request, *args, **kwargs):
-        # 카테고리만 가져오는 로직
-        categories = self.queryset.all()
-        serializer = self.get_serializer(categories, many=True)
-        return Response(serializer.data)
+        return queryset

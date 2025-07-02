@@ -8,7 +8,6 @@ from .serializers import MainResourceSerializer
 
 class MainResourceView(APIView):
     def get(self, request, screen=None):
-        # 경로에서 받은 'screen' 값을 이용하여 필터링
         resources = MainResource.objects.filter(screen=screen, is_active=True)
         
         if not resources:

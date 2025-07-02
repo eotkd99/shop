@@ -11,50 +11,83 @@ type LogoResource = {
   path: string;
 };
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+
 export function MainHeader() {
   const [logo, setLogo] = useState<LogoResource | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // 로고 데이터 가져오기
-    axios
-      .get("http://localhost:8000/api/main_resources/logo")
-      .then((response) => {
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          setLogo(response.data[0]);
-        }
-      })
-      .catch((error) => console.error("Error fetching logo:", error));
-
-    // 인증 상태 확인
-    const checkAuthentication = async () => {
+    const fetchLogoAndAuthStatus = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/check-auth/", {
-          withCredentials: true, // 쿠키 전송
+        const logoResponse = await axios.get(`${BASE_URL}/api/main_resources/logo`);
+        if (Array.isArray(logoResponse.data) && logoResponse.data.length > 0) {
+          setLogo(logoResponse.data[0]);
+        }
+
+        const authResponse = await axios.get(`${BASE_URL}/api/check-auth/`, {
+          withCredentials: true,
         });
-        setIsAuthenticated(res.data.isAuthenticated);
+        setIsAuthenticated(authResponse.data.isAuthenticated);
       } catch (error) {
-        // 인증되지 않은 경우에는 초기 상태 (로그인 필요)
-        setIsAuthenticated(false);
+        console.error("Error fetching data:", error);
       }
     };
 
-    checkAuthentication();
+    fetchLogoAndAuthStatus();
   }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:8000/api/logout/",
-        {},
-        { withCredentials: true } // 로그아웃 요청 시 쿠키 포함
-      );
-      setIsAuthenticated(false); // 로그아웃 후 인증 상태 false
-      window.location.href = "/"; // 홈으로 리다이렉트
+      await axios.post(`${BASE_URL}/api/logout/`, {}, { withCredentials: true });
+      setIsAuthenticated(false);
+      window.location.href = "/";
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
+
+  const AuthLinks = () => (
+    <>
+      <a href="/login" className="flex-1 flex flex-col items-center justify-center">
+        <User className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">로그인</span>
+      </a>
+      <a href="/join" className="flex-1 flex flex-col items-center justify-center">
+        <UserPlus className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">회원가입</span>
+      </a>
+    </>
+  );
+
+  const AuthenticatedLinks = () => (
+    <>
+      <a href="/wish" className="flex-1 flex flex-col items-center justify-center">
+        <Heart className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">찜</span>
+      </a>
+      <a href="/cart" className="flex-1 flex flex-col items-center justify-center">
+        <ShoppingCart className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">장바구니</span>
+      </a>
+      <a href="/alarm" className="flex-1 flex flex-col items-center justify-center">
+        <Bell className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">알림</span>
+      </a>
+      <a href="/account" className="flex-1 flex flex-col items-center justify-center">
+        <User className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">마이</span>
+      </a>
+      <button
+        onClick={handleLogout}
+        className="flex-1 flex flex-col items-center justify-center hover:bg-gray-50 transition"
+        style={{ border: "none", background: "none", padding: 0, margin: 0, cursor: "pointer" }}
+      >
+        <LogOut className="w-6 h-6 text-gray-500" />
+        <span className="text-xs text-gray-600 mt-1">로그아웃</span>
+      </button>
+    </>
+  );
 
   return (
     <div>
@@ -100,69 +133,7 @@ export function MainHeader() {
         </div>
 
         <div className="flex-[2] flex h-full">
-          {!isAuthenticated ? (
-            <>
-              <a
-                href="/login"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <User className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">로그인</span>
-              </a>
-              <a
-                href="/join"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <UserPlus className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">회원가입</span>
-              </a>
-            </>
-          ) : (
-            <>
-              <a
-                href="/wish"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <Heart className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">찜</span>
-              </a>
-              <a
-                href="/cart"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <ShoppingCart className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">장바구니</span>
-              </a>
-              <a
-                href="/alarm"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <Bell className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">알림</span>
-              </a>
-              <a
-                href="/account"
-                className="flex-1 flex flex-col items-center justify-center"
-              >
-                <User className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">마이</span>
-              </a>
-              <button
-                onClick={handleLogout}
-                className="flex-1 flex flex-col items-center justify-center hover:bg-gray-50 transition"
-                style={{
-                  border: "none",
-                  background: "none",
-                  padding: 0,
-                  margin: 0,
-                  cursor: "pointer",
-                }}
-              >
-                <LogOut className="w-6 h-6 text-gray-500" />
-                <span className="text-xs text-gray-600 mt-1">로그아웃</span>
-              </button>
-            </>
-          )}
+          {!isAuthenticated ? <AuthLinks /> : <AuthenticatedLinks />}
         </div>
       </header>
       <hr className="w-14/20 mx-auto my-4 border-gray-200" />

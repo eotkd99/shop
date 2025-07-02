@@ -1,5 +1,6 @@
 import { Product } from "@/types/products";
 import { Card, CardContent } from "@/components/ui/card";
+import { AiOutlineLoading } from "react-icons/ai";
 
 interface ProductGridProps {
   products: Product[];
@@ -8,7 +9,11 @@ interface ProductGridProps {
 
 export default function ProductGrid({ products, loading }: ProductGridProps) {
   if (loading) {
-    return <div>로딩중...</div>;
+    return (
+      <div className="flex justify-center items-center h-full">
+        <AiOutlineLoading className="animate-spin text-2xl text-gray-500" />
+      </div>
+    );
   }
 
   if (products.length === 0) {
@@ -31,7 +36,7 @@ export default function ProductGrid({ products, loading }: ProductGridProps) {
               </span>
             </div>
             <div className="flex items-center gap-1 text-xs mt-1">
-              {p.is_rocket && <span className="text-blue-500 font-bold">🚀로켓배송</span>}
+              {p.is_rocket && <span className="text-blue-500 font-bold">로켓배송</span>}
               {p.is_free_shipping && <span className="text-green-600">무료배송</span>}
             </div>
           </CardContent>
