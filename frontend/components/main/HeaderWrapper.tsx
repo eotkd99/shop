@@ -10,12 +10,12 @@ const mainCategoryExcludedPaths = ["/products"];
 export default function HeaderWrapper() {
   const pathname = usePathname();
   const shouldRenderHeader = !excludedPaths.includes(pathname);
-  const shouldRenderMainCategory = shouldRenderHeader && !mainCategoryExcludedPaths.includes(pathname);
+  const shouldRenderMainCategory = !excludedPaths.includes(pathname);
 
   return (
     <>
-      {/*shouldRenderHeader && <MainHeader />*/}
-      {/*shouldRenderMainCategory && <MainCategory />*/}
+      {shouldRenderHeader && <MainHeader />}
+      {shouldRenderMainCategory && <MainCategory />}
     </>
   );
 }

@@ -18,7 +18,7 @@ export function MainHeader() {
   useEffect(() => {
     // 로고 데이터 가져오기
     axios
-      .get("http://localhost:8000/resources/main_logo/")
+      .get("http://localhost:8000/api/main_resources/logo")
       .then((response) => {
         if (Array.isArray(response.data) && response.data.length > 0) {
           setLogo(response.data[0]);
@@ -61,11 +61,13 @@ export function MainHeader() {
       <header className="h-20 mt-5 flex items-center px-4 w-7/10 mx-auto bg-white">
         <div className="flex items-center justify-center flex-[2] h-20 w-full overflow-hidden">
           {logo ? (
-            <img
-              src={logo.path}
-              alt={logo.name}
-              className="w-full max-w-[90%] object-contain block"
-            />
+            <a href="/" className="w-full h-full">
+              <img
+                src={logo.path}
+                alt={logo.name}
+                className="w-full max-w-[90%] object-contain block"
+              />
+            </a>
           ) : (
             <div className="w-full h-full bg-gray-200 animate-pulse" />
           )}

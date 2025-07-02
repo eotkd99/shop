@@ -14,7 +14,7 @@ export function MainGridPanel() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/resources/main_grid_panel/")
+      .get("http://localhost:8000/api/main_resources/grid_panel")
       .then((response) => setData(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, []);

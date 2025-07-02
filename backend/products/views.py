@@ -89,3 +89,15 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.order_by('-sales_count', '-review_count', '-avg_rating')
 
         return queryset.distinct()
+
+
+class CategoryOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    # Active 카테고리만 가져오는 API
+    queryset = ProductCategory.objects.filter(is_active=True)
+    serializer_class = ProductCategorySerializer
+
+    def list(self, request, *args, **kwargs):
+        # 카테고리만 가져오는 로직
+        categories = self.queryset.all()
+        serializer = self.get_serializer(categories, many=True)
+        return Response(serializer.data)

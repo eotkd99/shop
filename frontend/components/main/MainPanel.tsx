@@ -22,7 +22,7 @@ export function MainPanel() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/resources/main_panel/")
+      .get("http://localhost:8000/api/main_resources/panel")
       .then((response) => setData(response.data))
       .catch((error) => console.error("Error fetching main panel data:", error));
   }, []);
