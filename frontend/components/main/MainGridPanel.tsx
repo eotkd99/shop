@@ -17,7 +17,7 @@ export function MainGridPanel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/main_resources/grid_panel`);
+        const response = await axios.get(`${BASE_URL}/api/main/resources/grid_panel`);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);

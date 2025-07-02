@@ -23,7 +23,7 @@ export default function JoinPage() {
     setError(null);
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/join/`, {
+      const res = await axios.post(`${BASE_URL}/api/users/join/`, {
         username: id,
         password: pw,
         password2: pw2,

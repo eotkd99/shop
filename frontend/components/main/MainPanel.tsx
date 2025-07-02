@@ -25,7 +25,7 @@ export function MainPanel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/main_resources/panel`);
+        const response = await axios.get(`${BASE_URL}/api/main/resources/panel`);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching main panel data:", error);

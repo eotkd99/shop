@@ -35,7 +35,7 @@ export function MainCategory() {
         const categoriesRes = await axios.get(`${BASE_URL}/api/products/categories/`);
         setCategories(categoriesRes.data);
         
-        const mainCategoriesRes = await axios.get(`${BASE_URL}/api/main_resources/main_category/`);
+        const mainCategoriesRes = await axios.get(`${BASE_URL}/api/main/resources/main_category/`);
         setMainCategories(mainCategoriesRes.data);
       } catch (error) {
         console.error(error);

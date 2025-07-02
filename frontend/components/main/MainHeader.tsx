@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Search, Heart, ShoppingCart, Bell, User, LogOut, UserPlus } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/userStore";
 
 type LogoResource = {
   id: number;
@@ -11,40 +13,56 @@ type LogoResource = {
   path: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export function MainHeader() {
   const [logo, setLogo] = useState<LogoResource | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
+
+  const { user, isAuthenticated, setUser, setAuthenticated, logout, searchKeyword, setSearchKeyword } = useUserStore();
+
+  const [searchQuery, setSearchQuery] = useState(searchKeyword);
 
   useEffect(() => {
     const fetchLogoAndAuthStatus = async () => {
       try {
-        const logoResponse = await axios.get(`${BASE_URL}/api/main_resources/logo`);
+        const logoResponse = await axios.get(`${BASE_URL}/api/main/resources/logo`);
         if (Array.isArray(logoResponse.data) && logoResponse.data.length > 0) {
           setLogo(logoResponse.data[0]);
         }
-
-        const authResponse = await axios.get(`${BASE_URL}/api/check-auth/`, {
-          withCredentials: true,
-        });
-        setIsAuthenticated(authResponse.data.isAuthenticated);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+        try {
+          const authResponse = await axios.get(`${BASE_URL}/api/users/check-auth/`, {
+            withCredentials: true,
+          });
+          setUser(authResponse.data.user || null);
+          setAuthenticated(authResponse.data.isAuthenticated);
+        } catch (authError) {
+          setUser(null);
+          setAuthenticated(false);
+        }
+      } catch (error) {}
     };
-
     fetchLogoAndAuthStatus();
-  }, []);
+  }, [setUser, setAuthenticated]);
+
+  useEffect(() => {
+    setSearchQuery(searchKeyword);
+  }, [searchKeyword]);
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${BASE_URL}/api/logout/`, {}, { withCredentials: true });
-      setIsAuthenticated(false);
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+      await axios.post(`${BASE_URL}/api/users/logout/`, {}, { withCredentials: true });
+      logout();
+      router.push("/");
+    } catch (error) {}
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const kw = searchQuery.trim();
+    if (!kw) return;
+    setSearchKeyword(kw);
+    router.push("/products");
   };
 
   const AuthLinks = () => (
@@ -95,11 +113,7 @@ export function MainHeader() {
         <div className="flex items-center justify-center flex-[2] h-20 w-full overflow-hidden">
           {logo ? (
             <a href="/" className="w-full h-full">
-              <img
-                src={logo.path}
-                alt={logo.name}
-                className="w-full max-w-[90%] object-contain block"
-              />
+              <img src={logo.path} alt={logo.name} className="w-full max-w-[90%] object-contain block" />
             </a>
           ) : (
             <div className="w-full h-full bg-gray-200 animate-pulse" />
@@ -107,7 +121,10 @@ export function MainHeader() {
         </div>
 
         <div className="flex items-center justify-center flex-[6]">
-          <form className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden shadow-sm">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex w-[85%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden shadow-sm"
+          >
             <Select defaultValue="all" onValueChange={() => {}}>
               <SelectTrigger className="h-full px-3 text-gray-800 text-sm bg-white border-none focus:ring-0 focus:outline-none transition cursor-pointer min-w-[100px] rounded-none">
                 <SelectValue placeholder="카테고리" />
@@ -120,8 +137,10 @@ export function MainHeader() {
             </Select>
             <input
               type="text"
-              placeholder="Search Amazon"
+              placeholder="Search"
               className="flex-1 h-full px-3 bg-white text-gray-700 text-base border-none focus:ring-0 focus:outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
               type="submit"
@@ -132,9 +151,7 @@ export function MainHeader() {
           </form>
         </div>
 
-        <div className="flex-[2] flex h-full">
-          {!isAuthenticated ? <AuthLinks /> : <AuthenticatedLinks />}
-        </div>
+        <div className="flex-[2] flex h-full">{!isAuthenticated ? <AuthLinks /> : <AuthenticatedLinks />}</div>
       </header>
       <hr className="w-14/20 mx-auto my-4 border-gray-200" />
     </div>

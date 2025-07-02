@@ -1,12 +1,13 @@
 "use client";
 
-import "@/app/globals.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import CategorySidebar from "@/components/products/CategorySidebar";
 import FilterSidebar from "@/components/products/FilterSidebar";
 import ProductGrid from "@/components/products/ProductGrid";
 import { Category, FilterType, Product } from "@/types/products";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/userStore";
 
 const SORTS = [
   { id: "ranking", label: "추천순" },
@@ -36,16 +37,18 @@ const api = axios.create({
 });
 
 export default function ProductsPage() {
+  const router = useRouter();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesTree, setCategoriesTree] = useState<Category[]>([]);
   const [filterTypes, setFilterTypes] = useState<FilterType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-
-  // 대분류별 필터 상태: { filterTypeName: [filterValueId, ...], ... }
   const [selectedFilters, setSelectedFilters] = useState<Record<string, number[]>>({});
   const [sort, setSort] = useState("ranking");
   const [loading, setLoading] = useState(false);
+
+  const searchKeyword = useUserStore((state) => state.searchKeyword);
 
   useEffect(() => {
     async function loadMeta() {
@@ -71,14 +74,11 @@ export default function ProductsPage() {
       setLoading(true);
       const params = new URLSearchParams();
       if (selectedCategory) params.append("category", selectedCategory.toString());
-
       Object.entries(selectedFilters).forEach(([filterType, ids]) => {
-        ids.forEach((id) => {
-          params.append(`filter_${filterType}`, id.toString());
-        });
+        ids.forEach((id) => params.append(`filter_${filterType}`, id.toString()));
       });
-
       params.append("sort", sort);
+      if (searchKeyword) params.append("search", searchKeyword);
 
       try {
         const res = await api.get(`/api/products/products/?${params.toString()}`);
@@ -90,23 +90,24 @@ export default function ProductsPage() {
       }
     }
     loadProducts();
-  }, [selectedCategory, selectedFilters, sort]);
+  }, [selectedCategory, selectedFilters, sort, searchKeyword]);
 
   function onFilterChange(filterType: string, filterValueId: number, checked: boolean) {
     setSelectedFilters((prev) => {
       const prevValues = prev[filterType] || [];
-      let newValues: number[];
-      if (checked) {
-        if (!prevValues.includes(filterValueId)) {
-          newValues = [...prevValues, filterValueId];
-        } else {
-          newValues = prevValues;
-        }
-      } else {
-        newValues = prevValues.filter((id) => id !== filterValueId);
-      }
+      const newValues = checked
+        ? [...new Set([...prevValues, filterValueId])]
+        : prevValues.filter((id) => id !== filterValueId);
       return { ...prev, [filterType]: newValues };
     });
+  }
+
+  function handleCategorySelect(categoryId: number | null) {
+    setSelectedCategory(categoryId);
+  }
+
+  function handleSortChange(sortId: string) {
+    setSort(sortId);
   }
 
   return (
@@ -116,7 +117,7 @@ export default function ProductsPage() {
           <aside className="w-[270px] flex-shrink-0 bg-white rounded-2xl shadow p-5 h-fit sticky top-8">
             <CategorySidebar
               categories={categoriesTree}
-              onSelect={setSelectedCategory}
+              onSelect={handleCategorySelect}
               selectedId={selectedCategory}
             />
             <FilterSidebar
@@ -131,7 +132,7 @@ export default function ProductsPage() {
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setSort(opt.id)}
+                  onClick={() => handleSortChange(opt.id)}
                   className={
                     "px-3 py-1 rounded-full text-[15px] font-semibold border transition-colors " +
                     (sort === opt.id
@@ -143,6 +144,11 @@ export default function ProductsPage() {
                 </button>
               ))}
             </div>
+            {searchKeyword && (
+              <div className="mb-3 text-base text-gray-500">
+                <span className="font-semibold">{searchKeyword}</span>에 대한 검색 결과
+              </div>
+            )}
             <ProductGrid products={products} loading={loading} />
           </main>
         </div>

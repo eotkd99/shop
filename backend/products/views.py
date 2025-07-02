@@ -61,9 +61,14 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         filters = self.request.query_params
 
         category_id = filters.get('category')
+        search = filters.get('search')
+
         if category_id:
             ids = self.get_descendants_ids(int(category_id))
             queryset = queryset.filter(category_id__in=ids)
+
+        if search:
+            queryset = queryset.filter(name__icontains=search) 
 
         queryset = self.apply_filters(queryset, filters)
         queryset = self.apply_sorting(queryset, filters.get('sort'))
