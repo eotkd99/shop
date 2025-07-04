@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 
 from .models import ProductCategory, FilterType, FilterValue, Product
 from .serializers import (
@@ -24,6 +25,12 @@ class ProductCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def active_categories(self, request):
         active_categories = ProductCategory.objects.filter(is_active=True)
+        serializer = ProductCategorySerializer(active_categories, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='depth-one')
+    def depth_one_categories(self, request):
+        active_categories = ProductCategory.objects.filter(depth=1)
         serializer = ProductCategorySerializer(active_categories, many=True)
         return Response(serializer.data)
 
@@ -68,7 +75,17 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(category_id__in=ids)
 
         if search:
-            queryset = queryset.filter(name__icontains=search) 
+            q = Q(name__icontains=search)
+
+            matched_categories = ProductCategory.objects.filter(name__icontains=search).values_list('id', flat=True)
+            category_ids = set()
+            for cid in matched_categories:
+                category_ids.update(self.get_descendants_ids(cid))
+
+            if category_ids:
+                q |= Q(category_id__in=category_ids)
+
+            queryset = queryset.filter(q)
 
         queryset = self.apply_filters(queryset, filters)
         queryset = self.apply_sorting(queryset, filters.get('sort'))
