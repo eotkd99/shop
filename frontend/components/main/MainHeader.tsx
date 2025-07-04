@@ -80,11 +80,11 @@ export function MainHeader() {
     <div className="flex gap-2">
       <a href="/login" className="flex flex-col items-center justify-center w-20 h-16 bg-white rounded-md hover:shadow-md transition">
         <User className="w-6 h-6 text-gray-600 mb-1" />
-        <span className="text-xs text-gray-700">로그인</span>
+        <span className="text-xs text-black">로그인</span>
       </a>
       <a href="/join" className="flex flex-col items-center justify-center w-20 h-16 bg-white rounded-md hover:shadow-md transition">
         <UserPlus className="w-6 h-6 text-gray-600 mb-1" />
-        <span className="text-xs text-gray-700">회원가입</span>
+        <span className="text-xs text-black">회원가입</span>
       </a>
     </div>
   );
@@ -113,15 +113,16 @@ export function MainHeader() {
     </div>
   );
   return (
-    <header className="flex overflow-hidden items-center w-full h-25 bg-gradient-to-b from-white to-gray-50 shadow-sm">
-      <div className="flex-[2.5] items-center justify-center h-20 w-fit px-2">
+    <header className="flex w-full h-20 bg-white shadow-sm overflow-hidden">
+      <div className="flex-[2] flex items-center justify-center px-4 bg-gray-50">
         {logo ? (
           <a href="/" className="h-full flex items-center justify-center">
-            <img src={logo.path} alt={logo.name} className="h-[70%] object-contain transition-transform hover:scale-105" />
+            <img src={logo.path} alt={logo.name} className="h-[70%] object-contain hover:scale-105 transition-transform" />
           </a>
         ) : <div className="w-full h-full bg-gray-200 animate-pulse" />}
       </div>
-      <div className="flex items-center justify-center flex-[5]">
+
+      <div className="flex items-center justify-center flex-[6]">
         <form onSubmit={handleSearchSubmit} className="flex w-[95%] h-10 border border-gray-300 rounded-md bg-white overflow-hidden shadow-sm">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="min-w-[100px] h-full px-3 text-gray-800 text-sm bg-white border-none focus:ring-0 focus:outline-none transition cursor-pointer rounded-none">
@@ -137,7 +138,8 @@ export function MainHeader() {
           </button>
         </form>
       </div>
-      <div className="flex-[2.5] flex items-center justify-evenly h-full">
+
+      <div className="flex-[2] flex items-center justify-center gap-2 bg-gray-50">
         {!isAuthenticated ? <AuthLinks /> : <AuthenticatedLinks />}
       </div>
     </header>

@@ -113,6 +113,7 @@ SIMPLE_JWT = {
 
 # 쿠키/세션 보안
 CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
 
 LANGUAGE_CODE = 'ko'  # 한글로 설정
@@ -121,3 +122,6 @@ LANGUAGES = [
     ('ko', 'Korean'),
     ('en', 'English'),
 ]
+
+FRONTEND_BASE_URL="http://localhost:3000"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

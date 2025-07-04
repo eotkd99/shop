@@ -75,9 +75,9 @@ export function MainCategoryBar() {
             {mainCategories.map((cat, i) => (
               <Card
                 key={cat.id}
-                className="flex items-center justify-center h-full px-0 py-0 bg-white hover:bg-gray-100 transition shadow-none rounded-none border-none min-w-fit cursor-pointer"
+                className="flex items-center justify-center h-[50%] px-0 py-0 bg-white hover:bg-gray-100 transition shadow-none rounded-none border-none min-w-fit cursor-pointer"
               >
-                <div className="flex items-center gap-1 h-full">
+                <div className="flex items-center gap-1 h-[50%]">
                   <img src={cat.image} alt={cat.alt_text} className="w-4 h-4" />
                   <span className="text-xs text-gray-700 whitespace-nowrap">
                     {`카테고리 ${i + 1}`}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import GoogleLoginButton from '@/components/main/GoogleLoginButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; // 환경 변수 처리
 
@@ -74,6 +75,9 @@ export default function LoginPage() {
               <div className="text-red-500 text-sm text-center">{error}</div>
             )}
             <Button type="submit" className="w-full mt-2 cursor-pointer">로그인</Button>
+            <div className="w-full mt-2 cursor-pointer flex items-center justify-center">
+              <GoogleLoginButton />
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center px-6 pb-4">
@@ -82,8 +86,8 @@ export default function LoginPage() {
               아이디 찾기
             </a>
             <span className="text-gray-300 text-xs">|</span>
-            <a href="/find-password" className="text-xs text-gray-500 hover:underline text-center inline-block">
-              비밀번호 찾기
+            <a href="/reset-password" className="text-xs text-gray-500 hover:underline text-center inline-block">
+              비밀번호 재설정
             </a>
             <span className="text-gray-300 text-xs">|</span>
             <a href="/join" className="text-xs text-gray-500 hover:underline text-center inline-block">
